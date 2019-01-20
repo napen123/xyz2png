@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018, Ethan Dagner.
+Copyright (c) 2018-2019, Ethan Dagner.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -55,7 +55,7 @@ fn main() -> Result<(), String> {
     maybe_error!(xyz_file.read_exact(&mut header));
 
     if &header != b"XYZ1" {
-        return Err("The input file is not an XYZ file.".to_owned());
+        return Err("The provided file is not a valid XYZ file.".to_owned());
     }
 
     let width = maybe_error!(xyz_file.read_u16::<LittleEndian>()) as u32;
@@ -69,7 +69,6 @@ fn main() -> Result<(), String> {
         Err(_) => return Err("Failed to decompress image data.".to_owned())
     };
 
-    let uncompressed_length = uncompressed_data.len();
     let mut data_cursor = Cursor::new(uncompressed_data);
     let mut palette: Vec<Rgb<u8>> = Vec::with_capacity(256);
 
@@ -81,7 +80,7 @@ fn main() -> Result<(), String> {
         palette.push(Rgb([r, g, b]));
     }
 
-    let buffer: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(width, height, |x, y| {
+    let buffer: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(width, height, |_x, _y| {
         let pallete_index = data_cursor.read_u8().unwrap();
 
         palette[pallete_index as usize]
@@ -94,3 +93,4 @@ fn main() -> Result<(), String> {
 
     Ok(())
 }
+
