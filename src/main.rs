@@ -39,15 +39,26 @@ macro_rules! maybe_error {
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
+    let arg_len = args.len();
 
-    if args.len() < 2 {
-        println!("Usage : xyz2png [xyz file]");
+    if arg_len != 2 && arg_len != 3 {
+        println!("Usage:\n   xyz2png [xyz file]\n   xyz2png [xyz file] [output file]");
 
         return Ok(());
     }
 
     let input_file = &args[1];
     let mut xyz_file: File = maybe_error!(File::open(input_file));
+
+    let output_file = if arg_len == 3 {
+        args[2].to_owned()
+    } else {
+        let mut file = String::from(Path::new(input_file).file_stem().unwrap().to_str().unwrap());
+        file.push_str(".png");
+
+        file
+    };
+
     let file_size = maybe_error!(xyz_file.seek(SeekFrom::End(0)));
     maybe_error!(xyz_file.seek(SeekFrom::Start(0)));
 
@@ -85,9 +96,6 @@ fn main() -> Result<(), String> {
 
         palette[pallete_index as usize]
     });
-
-    let mut output_file = String::from(Path::new(input_file).file_stem().unwrap().to_str().unwrap());
-    output_file.push_str(".png");
 
     maybe_error!(ImageRgb8(buffer).save(Path::new(&output_file)));
 
