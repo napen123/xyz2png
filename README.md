@@ -1,8 +1,8 @@
 # xyz2png
-A small tool to convert RPG Maker 2000/2003 XYZ files into PNG images.
+A simple tool to convert RPG Maker 2000/2003 XYZ files into PNG images.
 
 ## Usage
-> xyz2png [xyz file]
+> xyz2png [xyz file] [optional output file]
 
 ## Dependencies
 * [image](https://github.com/PistonDevelopers/image)
@@ -11,4 +11,5 @@ A small tool to convert RPG Maker 2000/2003 XYZ files into PNG images.
 
 ## License
 xyz2png is licensed under the BSD 3-Clause license.
+
 You can view the license [here](LICENSE).
