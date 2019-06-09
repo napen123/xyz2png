@@ -56,10 +56,13 @@ fn main() -> Result<(), String> {
     let output_file = if arg_len == 3 {
         args[2].to_owned()
     } else {
-        let mut file = String::from(Path::new(input_file).file_stem().unwrap().to_str().unwrap());
-        file.push_str(".png");
+        let output = Path::new(input_file);
+        let output_ext = output.with_extension("png");
 
-        file
+        output_ext
+            .to_str()
+            .unwrap()
+            .to_owned()
     };
 
     let file_size = maybe_error!(xyz_file.seek(SeekFrom::End(0)));
