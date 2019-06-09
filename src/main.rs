@@ -37,7 +37,7 @@ macro_rules! maybe_error {
     };
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Rgb(u8, u8, u8);
 
 fn main() -> Result<(), String> {
