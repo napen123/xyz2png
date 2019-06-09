@@ -13,7 +13,6 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-extern crate image;
 extern crate byteorder;
 extern crate miniz_oxide;
 
@@ -22,11 +21,12 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
-use image::{ImageRgb8, ImageBuffer, Rgb};
-
 use byteorder::{ReadBytesExt, LittleEndian};
 
 use miniz_oxide::inflate::decompress_to_vec_zlib;
+
+mod stb;
+use stb::stb_write_png;
 
 macro_rules! maybe_error {
     ($x:expr) => {
@@ -36,6 +36,9 @@ macro_rules! maybe_error {
         }
     };
 }
+
+#[derive(Clone, Copy)]
+pub struct Rgb(u8, u8, u8);
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
@@ -81,24 +84,29 @@ fn main() -> Result<(), String> {
     };
 
     let mut data_cursor = Cursor::new(uncompressed_data);
-    let mut palette: Vec<Rgb<u8>> = Vec::with_capacity(256);
+    let mut palette: Vec<Rgb> = Vec::with_capacity(256);
 
     for _ in 0..256 {
         let r = maybe_error!(data_cursor.read_u8());
         let g = maybe_error!(data_cursor.read_u8());
         let b = maybe_error!(data_cursor.read_u8());
 
-        palette.push(Rgb([r, g, b]));
+        palette.push(Rgb(r, g, b));
     }
 
-    let buffer: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(width, height, |_x, _y| {
-        let pallete_index = data_cursor.read_u8().unwrap();
+    let image_size = (width * height) as usize;
+    let mut image_data: Vec<Rgb> = Vec::with_capacity(image_size);
 
-        palette[pallete_index as usize]
-    });
+    for _ in 0..image_size {
+        // TODO: There's definitely a better way of doing this; this can't be fast.
+        let pallete_index = maybe_error!(data_cursor.read_u8());
+        image_data.push(palette[pallete_index as usize]);
+    }
 
-    maybe_error!(ImageRgb8(buffer).save(Path::new(&output_file)));
-
-    Ok(())
+    if stb_write_png(&output_file, width, height, &image_data) {
+        Ok(())
+    } else {
+        Err("Failed to write PNG file.".to_owned())
+    }
 }
 
