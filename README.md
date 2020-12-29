@@ -2,7 +2,7 @@
 A simple tool to convert RPG Maker 2000/2003 XYZ files into PNG images.
 
 ## Usage
-> xyz2png <xyz file> [optional output file]
+> xyz2png [xyz file] [optional output file]
 
 ## Dependencies
 * [byteorder](https://github.com/BurntSushi/byteorder)
